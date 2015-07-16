@@ -12,6 +12,15 @@ function api_failure($message = NULL)
 	echo json_encode($obj);
 	exit(0);
 }
+function api_failure_db()
+{
+	global $mysql;
+	$obj = array();
+	$obj["status"] = "failure";
+	$obj["message"] = API_DEBUG ? mysqli_error($mysql) : "Database error";
+	echo json_encode($obj);
+	exit(0);
+}
 function api_success($result = NULL)
 {
 	$obj = array();
@@ -35,7 +44,7 @@ function upload_okay($field)
 	return true;
 }
 
-//Convert decimal price (USD) to cents
+//Convert decimal price (USD) to cents, negative result indicates failure
 function price_to_cents($price)
 {
 	//Trim dollar sign (optional)
@@ -43,11 +52,11 @@ function price_to_cents($price)
 	//Split at decimal
 	$parts = explode(".", $price);
 	//Must have 2 parts
-	if(count($parts) != 2) return 0;
+	if(count($parts) != 2) return -1;
 	//Parts must be numeric
-	if(!is_numeric($parts[0]) || !is_numeric($parts[1])) return 0;
+	if(!is_numeric($parts[0]) || !is_numeric($parts[1])) return -1;
 	//Precision must be 2
-	if(strlen($parts[1]) != 2) return 0;
+	if(strlen($parts[1]) != 2) return -1;
 	return intval($parts[0]) * 100 + intval($parts[1]);
 }
 //Convert cents to decimal price (USD)
@@ -66,10 +75,7 @@ function query_array($q)
 {
 	global $mysql;
 	$result = mysqli_query($mysql, $q);
-	if($result === FALSE || $result === TRUE)
-	{
-		return array();
-	}
+	if($result === FALSE || $result === TRUE) return array();
 	$list = array();
 	if(mysqli_num_rows($result))
 	{
@@ -80,6 +86,20 @@ function query_array($q)
 	}
 	mysqli_free_result($result);
 	return $list;
+}
+//Fetch a single result from a query (requires exactly 1 result)
+function query_assoc($q)
+{
+	global $mysql;
+	$result = mysqli_query($mysql, $q);
+	if($result === FALSE || $result === TRUE) return NULL;
+	$item = NULL;
+	if(mysqli_num_rows($result) == 1)
+	{
+		$item = mysqli_fetch_assoc($result);
+	}
+	mysqli_free_result($result);
+	return $item;
 }
 //Attempt MySQL insert from associative array
 function insert_assoc($table, $item)
@@ -101,7 +121,7 @@ function insert_assoc($table, $item)
 		else
 		{
 			//Everything else: stringify, escape, and quote
-			$vals .= "\"".mysqli_real_escape_string($mysql, strval($v))."\"";
+			$vals .= "'".mysqli_real_escape_string($mysql, strval($v))."'";
 		}
 	}
 	//Build query string

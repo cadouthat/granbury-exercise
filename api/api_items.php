@@ -43,12 +43,12 @@ function processItems($item)
 					//Convert price to fixed point (cent)
 					$price = price_to_cents(trim($line[1]));
 					//Verify contents
-					if(!strlen($name) || !intval($price)) api_failure("Invalid data");
+					if(!strlen($name) || $price < 0) api_failure("Invalid data");
 					//Attempt insertion
 					$item = array();
 					$item["name"] = $name;
 					$item["price"] = $price;
-					if(!insert_assoc("item", $item)) api_failure("Database insertion failed");
+					if(!insert_assoc("item", $item)) api_failure_db();
 				}
 				break;
 
