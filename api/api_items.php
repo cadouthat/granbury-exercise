@@ -3,7 +3,7 @@
 Handles /v1/items/ requests
 */
 
-function processItems($item)
+function processItems($item, $subitem)
 {
 	global $mysql, $_JSON;
 	if(is_null($item))

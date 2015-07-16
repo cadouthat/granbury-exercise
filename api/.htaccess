@@ -2,3 +2,4 @@ RewriteEngine on
 
 RewriteRule ^([^/]+)/([^/]+)/$ api.php?api=$1&collection=$2 [L,NE]
 RewriteRule ^([^/]+)/([^/]+)/([^/]+)$ api.php?api=$1&collection=$2&item=$3 [L,NE]
+RewriteRule ^([^/]+)/([^/]+)/([^/]+)/([^/]+)$ api.php?api=$1&collection=$2&item=$3&subitem=$4 [L,NE]

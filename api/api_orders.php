@@ -4,8 +4,9 @@ Handles /v1/orders/ requests
 */
 
 //Calculate totals for a given order
-function order_totals($orderId)
+function update_order_totals($orderId)
 {
+	global $mysql;
 	//Extra safety check
 	$orderId = intval($orderId);
 	//Total all line items
@@ -37,10 +38,17 @@ function order_totals($orderId)
 		$totalTax += $tax_fixed;
 	}
 	$grandTotal = $subTotal + $totalTax;
+	//Update order in database
+	$q = "UPDATE `order` SET ";
+	$q .= "subTotal = ".$subTotal.", ";
+	$q .= "totalTax = ".$totalTax.", ";
+	$q .= "grandTotal = ".$grandTotal." ";
+	$q .= "WHERE orderId = ".$orderId;
+	if(!mysqli_query($mysql, $q)) api_dbfailure();
 	return array("subTotal" => $subTotal, "totalTax" => $totalTax, "grandTotal" => $grandTotal);
 }
 
-function processOrders($item)
+function processOrders($item, $subitem)
 {
 	global $mysql, $_JSON;
 	if(is_null($item))
@@ -93,17 +101,17 @@ function processOrders($item)
 				break;
 		}
 	}
-	else
+	else if(is_null($subitem))
 	{
 		//Force orderId to integer for query safety
 		$orderId = intval($item);
-		//Query existing order
-		$order = db_fetch("SELECT orderNumber FROM `order` WHERE orderId = {$orderId}");
-		if(is_null($order)) api_failure("Order does not exist");
 		//Item requests
 		switch($_SERVER['REQUEST_METHOD'])
 		{
 			case "PUT": //Submit order
+				//Query existing order
+				$order = db_fetch("SELECT orderNumber FROM `order` WHERE orderId = {$orderId}");
+				if(is_null($order)) api_failure("Order does not exist");
 				//If order is already submitted, no action is needed
 				$orderNumber = intval($order['orderNumber']);
 				if($orderNumber <= 0)
@@ -128,66 +136,69 @@ function processOrders($item)
 				api_success(array("orderNumber" => $orderNumber));
 				break;
 
-			case "POST": //Add/update/remove line item
+			case "POST": //Add/update line item
 				//Validate arguments
 				if(!isset($_JSON['itemName'])) api_failure("Requires 'itemName'");
 				if(!isset($_JSON['qty'])) api_failure("Requires 'qty'");
-				if(!is_numeric($_JSON['qty'])) api_failure("Invalid value for 'qty'");
+				$qty = intval($_JSON['qty']);
+				if($qty <= 0) api_failure("Invalid value for 'qty'");
 				//Query existing line item
 				$name_safe = mysqli_real_escape_string($mysql, $_JSON['itemName']);
 				$line_where = " WHERE orderId = {$orderId} AND itemName = '{$name_safe}'";
 				$line = db_fetch("SELECT qty, price FROM `orderlineitem`".$line_where);
-				//Determine action for quantity
-				$qty = intval($_JSON['qty']);
-				if($qty > 0) //Insert/update line item
+				//Determine action needed
+				if(is_null($line))
 				{
-					if(is_null($line))
-					{
-						//Query current item price
-						$itemPrice = db_fetch("SELECT price FROM `item` WHERE name = '{$name_safe}'");
-						if(is_null($itemPrice)) api_failure("Item not found");
-						$price = intval($itemPrice['price']);
-						//Insert line item
-						$line = array();
-						$line['orderId'] = $orderId;
-						$line['itemName'] = $_JSON['itemName'];
-						$line['qty'] = $qty;
-						$line['price'] = $price;
-						$line['extendedPrice'] = $qty * $price;
-						if(!db_insert("orderlineitem", $line)) api_dbfailure();
-					}
-					else
-					{
-						//Update line item
-						$price = intval($line['price']);
-						$ext_price = $qty * $price;
-						if(!mysqli_query($mysql, "UPDATE `orderlineitem` SET qty = {$qty}, extendedPrice = {$ext_price}".$line_where))
-						{
-							api_dbfailure();
-						}
-					}
+					//Query current item price
+					$itemPrice = db_fetch("SELECT price FROM `item` WHERE name = '{$name_safe}'");
+					if(is_null($itemPrice)) api_failure("Item not found");
+					$price = intval($itemPrice['price']);
+					//Insert line item
+					$line = array();
+					$line['orderId'] = $orderId;
+					$line['itemName'] = $_JSON['itemName'];
+					$line['qty'] = $qty;
+					$line['price'] = $price;
+					$line['extendedPrice'] = $qty * $price;
+					if(!db_insert("orderlineitem", $line)) api_dbfailure();
 				}
-				else //Remove line item (zero quantity)
+				else
 				{
-					if(!is_null($line))
+					//Update line item
+					$price = intval($line['price']);
+					$ext_price = $qty * $price;
+					if(!mysqli_query($mysql, "UPDATE `orderlineitem` SET qty = {$qty}, extendedPrice = {$ext_price}".$line_where))
 					{
-						//Delete
-						if(!mysqli_query($mysql, "DELETE FROM `orderlineitem`".$line_where))
-						{
-							api_dbfailure();
-						}
+						api_dbfailure();
 					}
-					//NOTE: Is failure appropriate if nothing was removed?
 				}
 				//Calculate new totals
-				$totals = order_totals($orderId);
-				//Update totals in database
-				$q = "UPDATE `order` SET ";
-				$q .= "subTotal = ".$totals['subTotal'].", ";
-				$q .= "totalTax = ".$totals['totalTax'].", ";
-				$q .= "grandTotal = ".$totals['grandTotal']." ";
-				$q .= "WHERE orderId = ".$orderId;
-				if(!mysqli_query($mysql, $q)) api_dbfailure();
+				$totals = update_order_totals($orderId);
+				api_success(array("totals" => $totals));
+				break;
+
+			default:
+				api_failure("Invalid operation");
+				break;
+		}
+	}
+	else
+	{
+		//Force orderId to integer for query safety
+		$orderId = intval($item);
+		//Sub-item requests
+		switch($_SERVER['REQUEST_METHOD'])
+		{
+			case "DELETE": //Remove line item
+				//Delete order line
+				$name_safe = mysqli_real_escape_string($mysql, $subitem);
+				$line_where = " WHERE orderId = {$orderId} AND itemName = '{$name_safe}'";
+				if(!mysqli_query($mysql, "DELETE FROM `orderlineitem`".$line_where))
+				{
+					api_dbfailure();
+				}
+				//Calculate new totals
+				$totals = update_order_totals($orderId);
 				api_success(array("totals" => $totals));
 				break;
 

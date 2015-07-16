@@ -44,6 +44,11 @@ function upload_okay($field)
 	return true;
 }
 
+//Verify that a string represents an unsigned integer
+function is_uint($str)
+{
+	return preg_match('/^[0-9]+$/', $str);
+}
 //Convert decimal price (USD) to cents, negative result indicates failure
 function price_to_cents($price)
 {
@@ -54,7 +59,7 @@ function price_to_cents($price)
 	//Must have 2 parts
 	if(count($parts) != 2) return -1;
 	//Parts must be numeric
-	if(!is_numeric($parts[0]) || !is_numeric($parts[1])) return -1;
+	if(!is_uint($parts[0]) || !is_uint($parts[1])) return -1;
 	//Precision must be 2
 	if(strlen($parts[1]) != 2) return -1;
 	return intval($parts[0]) * 100 + intval($parts[1]);

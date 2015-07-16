@@ -3,7 +3,7 @@
 Handles /v1/tenders/ requests
 */
 
-function processTenders($item)
+function processTenders($item, $subitem)
 {
 	global $mysql, $_JSON;
 	if(is_null($item))
@@ -16,8 +16,8 @@ function processTenders($item)
 				if(!isset($_JSON['orderId'])) api_failure("Requires 'orderId'");
 				if(!isset($_JSON['amountTendered'])) api_failure("Requires 'amountTendered'");
 				if(!isset($_JSON['changeGiven'])) api_failure("Requires 'changeGiven'");
-				if(!is_numeric($_JSON['amountTendered'])) api_failure("Invalid value for 'amountTendered'");
-				if(!is_numeric($_JSON['changeGiven'])) api_failure("Invalid value for 'changeGiven'");
+				if(!is_uint($_JSON['amountTendered'])) api_failure("Invalid value for 'amountTendered'");
+				if(!is_uint($_JSON['changeGiven'])) api_failure("Invalid value for 'changeGiven'");
 				//Find existing order
 				$orderId = intval($_JSON['orderId']);
 				$order = db_fetch("SELECT orderNumber FROM `order` WHERE orderId = {$orderId}");

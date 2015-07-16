@@ -20,16 +20,17 @@ $_JSON = json_decode(file_get_contents('php://input'), true);
 
 //Route requests by collection
 $item = isset($_GET['item']) ? $_GET['item'] : NULL;
+$subitem = isset($_GET['subitem']) ? $_GET['subitem'] : NULL;
 switch($_GET['collection'])
 {
 	case "items":
-		processItems($item);
+		processItems($item, $subitem);
 		break;
 	case "orders":
-		processOrders($item);
+		processOrders($item, $subitem);
 		break;
 	case "tenders":
-		processTenders($item);
+		processTenders($item, $subitem);
 		break;
 	default:
 		api_failure("Invalid operation");
