@@ -59,16 +59,6 @@ function price_to_cents($price)
 	if(strlen($parts[1]) != 2) return -1;
 	return intval($parts[0]) * 100 + intval($parts[1]);
 }
-//Convert cents to decimal price (USD)
-function cents_to_price($cents)
-{
-	$cents = intval($cents);
-	//Separate dollars and remaining cents
-	$dollars = $cents / 100;
-	$cents = $cents % 100;
-	//Format with $ and 2 decimals
-	return sprintf("$%d.%02d", $dollars, $cents);
-}
 
 //Build a PHP array (AoS style) from MySQL results (empty array indicates failure or no results)
 function db_fetch_all($q)

@@ -42,7 +42,7 @@ function order_totals($orderId)
 
 function processOrders($item)
 {
-	global $mysql;
+	global $mysql, $_JSON;
 	if(is_null($item))
 	{
 		//Collection requests
@@ -130,15 +130,15 @@ function processOrders($item)
 
 			case "POST": //Add/update/remove line item
 				//Validate arguments
-				if(!isset($_POST['itemName'])) api_failure("Requires 'itemName'");
-				if(!isset($_POST['qty'])) api_failure("Requires 'qty'");
-				if(!is_numeric($_POST['qty'])) api_failure("Invalid value for 'qty'");
+				if(!isset($_JSON['itemName'])) api_failure("Requires 'itemName'");
+				if(!isset($_JSON['qty'])) api_failure("Requires 'qty'");
+				if(!is_numeric($_JSON['qty'])) api_failure("Invalid value for 'qty'");
 				//Query existing line item
-				$name_safe = mysqli_real_escape_string($mysql, $_POST['itemName']);
+				$name_safe = mysqli_real_escape_string($mysql, $_JSON['itemName']);
 				$line_where = " WHERE orderId = {$orderId} AND itemName = '{$name_safe}'";
 				$line = db_fetch("SELECT qty, price FROM `orderlineitem`".$line_where);
 				//Determine action for quantity
-				$qty = intval($_POST['qty']);
+				$qty = intval($_JSON['qty']);
 				if($qty > 0) //Insert/update line item
 				{
 					if(is_null($line))
@@ -150,7 +150,7 @@ function processOrders($item)
 						//Insert line item
 						$line = array();
 						$line['orderId'] = $orderId;
-						$line['itemName'] = $_POST['itemName'];
+						$line['itemName'] = $_JSON['itemName'];
 						$line['qty'] = $qty;
 						$line['price'] = $price;
 						$line['extendedPrice'] = $qty * $price;
@@ -188,10 +188,7 @@ function processOrders($item)
 				$q .= "grandTotal = ".$totals['grandTotal']." ";
 				$q .= "WHERE orderId = ".$orderId;
 				if(!mysqli_query($mysql, $q)) api_dbfailure();
-				//Format and return totals
-				$formatted = array();
-				foreach($totals as $k => $v) $formatted[$k] = cents_to_price($v);
-				api_success($formatted);
+				api_success(array("totals" => $totals));
 				break;
 
 			default:

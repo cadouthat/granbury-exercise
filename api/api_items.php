@@ -5,6 +5,7 @@ Handles /v1/items/ requests
 
 function processItems($item)
 {
+	global $mysql, $_JSON;
 	if(is_null($item))
 	{
 		//Collection requests
@@ -12,12 +13,7 @@ function processItems($item)
 		{
 			case "GET": //Return a list of all items
 				//Query item list
-				$item_list = db_fetch_all("SELECT name, price FROM `item` ORDER BY price DESC");
-				//Format prices
-				for($i = 0; $i < count($item_list); $i++)
-				{
-					$item_list[$i]['price'] = cents_to_price($item_list[$i]['price']);
-				}
+				$item_list = db_fetch_all("SELECT name, price FROM `item` ORDER BY price DESC, name");
 				api_success(array("items" => $item_list));
 				break;
 
