@@ -12,7 +12,7 @@ function api_failure($message = NULL)
 	echo json_encode($obj);
 	exit(0);
 }
-function api_failure_db()
+function api_dbfailure()
 {
 	global $mysql;
 	$obj = array();
@@ -71,7 +71,7 @@ function cents_to_price($cents)
 }
 
 //Build a PHP array (AoS style) from MySQL results (empty array indicates failure or no results)
-function query_array($q)
+function db_fetch_all($q)
 {
 	global $mysql;
 	$result = mysqli_query($mysql, $q);
@@ -88,7 +88,7 @@ function query_array($q)
 	return $list;
 }
 //Fetch a single result from a query (requires exactly 1 result)
-function query_assoc($q)
+function db_fetch($q)
 {
 	global $mysql;
 	$result = mysqli_query($mysql, $q);
@@ -102,7 +102,7 @@ function query_assoc($q)
 	return $item;
 }
 //Attempt MySQL insert from associative array
-function insert_assoc($table, $item)
+function db_insert($table, $item)
 {
 	global $mysql;
 	//Build column and value lists

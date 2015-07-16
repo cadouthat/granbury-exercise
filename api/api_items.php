@@ -12,7 +12,7 @@ function processItems($item)
 		{
 			case "GET": //Return a list of all items
 				//Query item list
-				$item_list = query_array("SELECT name, price FROM `item` ORDER BY price DESC");
+				$item_list = db_fetch_all("SELECT name, price FROM `item` ORDER BY price DESC");
 				//Format prices
 				for($i = 0; $i < count($item_list); $i++)
 				{
@@ -48,7 +48,7 @@ function processItems($item)
 					$item = array();
 					$item["name"] = $name;
 					$item["price"] = $price;
-					if(!insert_assoc("item", $item)) api_failure_db();
+					if(!db_insert("item", $item)) api_dbfailure();
 				}
 				break;
 

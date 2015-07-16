@@ -10,7 +10,7 @@ function order_totals($orderId)
 	$orderId = intval($orderId);
 	//Total all line items
 	$subTotal = 0;
-	$lines = query_array("SELECT extendedPrice FROM `orderlineitem` WHERE orderId = {$orderId}");
+	$lines = db_fetch_all("SELECT extendedPrice FROM `orderlineitem` WHERE orderId = {$orderId}");
 	foreach($lines as $line)
 	{
 		$subTotal += intval($line['extendedPrice']);
@@ -20,7 +20,7 @@ function order_totals($orderId)
 	//		Should tax be calculated per-item or per-order?
 	//		Should tax be rounded or floored?
 	$totalTax = 0;
-	$taxRates = query_array("SELECT rate FROM `salestaxrate`");
+	$taxRates = db_fetch_all("SELECT rate FROM `salestaxrate`");
 	foreach($taxRates as $taxRate)
 	{
 		//Get fixed point tax amount (thousandth-cents)
@@ -50,11 +50,11 @@ function processOrders($item)
 		{
 			case "GET": //List orders
 				//Query in-progress orders
-				$inProgress = query_array("SELECT o.* FROM `order` AS o ".
+				$inProgress = db_fetch_all("SELECT o.* FROM `order` AS o ".
 					"WHERE o.orderNumber = 0 ".
 					"ORDER BY o.timestamp DESC");
 				//Query submitted orders
-				$submitted = query_array("SELECT o.*, ".
+				$submitted = db_fetch_all("SELECT o.*, ".
 					"COALESCE(SUM(t.amountTendered), 0) AS totalTendered, ".
 					"COALESCE(SUM(t.changeGiven), 0) AS totalChange ".
 					"FROM `order` AS o ".
@@ -84,7 +84,7 @@ function processOrders($item)
 
 			case "POST": //Create order
 				//Insert empty order and return ID
-				if(!insert_assoc("order", array())) api_failure_db();
+				if(!db_insert("order", array())) api_dbfailure();
 				api_success(array("orderId" => mysqli_insert_id($mysql)));
 				break;
 
@@ -98,7 +98,7 @@ function processOrders($item)
 		//Force orderId to integer for query safety
 		$orderId = intval($item);
 		//Query existing order
-		$order = query_assoc("SELECT orderNumber FROM `order` WHERE orderId = {$orderId}");
+		$order = db_fetch("SELECT orderNumber FROM `order` WHERE orderId = {$orderId}");
 		if(is_null($order)) api_failure("Order does not exist");
 		//Item requests
 		switch($_SERVER['REQUEST_METHOD'])
@@ -111,18 +111,18 @@ function processOrders($item)
 					//Atomic counter store/update
 					if(!mysqli_query($mysql, "UPDATE apivars SET value = MOD((@cur_value := value), 100) + 1 WHERE name = 'next_order'"))
 					{
-						api_failure_db();
+						api_dbfailure();
 					}
-					$result = query_assoc("SELECT @cur_value AS v");
+					$result = db_fetch("SELECT @cur_value AS v");
 					if(is_null($result))
 					{
-						api_failure_db();
+						api_dbfailure();
 					}
 					$orderNumber = intval($result['v']);
 					//Update order number
 					if(!mysqli_query($mysql, "UPDATE `order` SET orderNumber = {$orderNumber} WHERE orderId = {$orderId}"))
 					{
-						api_failure_db();
+						api_dbfailure();
 					}
 				}
 				api_success(array("orderNumber" => $orderNumber));
@@ -136,7 +136,7 @@ function processOrders($item)
 				//Query existing line item
 				$name_safe = mysqli_real_escape_string($mysql, $_POST['itemName']);
 				$line_where = " WHERE orderId = {$orderId} AND itemName = '{$name_safe}'";
-				$line = query_assoc("SELECT qty, price FROM `orderlineitem`".$line_where);
+				$line = db_fetch("SELECT qty, price FROM `orderlineitem`".$line_where);
 				//Determine action for quantity
 				$qty = intval($_POST['qty']);
 				if($qty > 0) //Insert/update line item
@@ -144,7 +144,7 @@ function processOrders($item)
 					if(is_null($line))
 					{
 						//Query current item price
-						$itemPrice = query_assoc("SELECT price FROM `item` WHERE name = '{$name_safe}'");
+						$itemPrice = db_fetch("SELECT price FROM `item` WHERE name = '{$name_safe}'");
 						if(is_null($itemPrice)) api_failure("Item not found");
 						$price = intval($itemPrice['price']);
 						//Insert line item
@@ -154,7 +154,7 @@ function processOrders($item)
 						$line['qty'] = $qty;
 						$line['price'] = $price;
 						$line['extendedPrice'] = $qty * $price;
-						if(!insert_assoc("orderlineitem", $line)) api_failure_db();
+						if(!db_insert("orderlineitem", $line)) api_dbfailure();
 					}
 					else
 					{
@@ -163,7 +163,7 @@ function processOrders($item)
 						$ext_price = $qty * $price;
 						if(!mysqli_query($mysql, "UPDATE `orderlineitem` SET qty = {$qty}, extendedPrice = {$ext_price}".$line_where))
 						{
-							api_failure_db();
+							api_dbfailure();
 						}
 					}
 				}
@@ -174,7 +174,7 @@ function processOrders($item)
 						//Delete
 						if(!mysqli_query($mysql, "DELETE FROM `orderlineitem`".$line_where))
 						{
-							api_failure_db();
+							api_dbfailure();
 						}
 					}
 					//NOTE: Is failure appropriate if nothing was removed?
@@ -187,7 +187,7 @@ function processOrders($item)
 				$q .= "totalTax = ".$totals['totalTax'].", ";
 				$q .= "grandTotal = ".$totals['grandTotal']." ";
 				$q .= "WHERE orderId = ".$orderId;
-				if(!mysqli_query($mysql, $q)) api_failure_db();
+				if(!mysqli_query($mysql, $q)) api_dbfailure();
 				//Format and return totals
 				$formatted = array();
 				foreach($totals as $k => $v) $formatted[$k] = cents_to_price($v);
