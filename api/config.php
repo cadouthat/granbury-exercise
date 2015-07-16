@@ -7,7 +7,7 @@ define("DB_USER", "granbury");
 define("DB_PASS", "granbury");
 define("DB_NAME", "granbury");
 
-define("API_DEBUG", true);
+define("API_DEBUG", false);
 
 date_default_timezone_set("America/Los_Angeles");
 ?>

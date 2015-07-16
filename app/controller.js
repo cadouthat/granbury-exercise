@@ -1,36 +1,39 @@
-API_BASE = "http://localhost/granbury/api/v1/";
-
 function cashRegCtrl($scope, $http)
 {
+	$scope.API_URL = "http://localhost/granbury/api/v1/";
+
 	//Request latest item list
 	$scope.API_listItems = function() {
-		$http.get(API_BASE + "items/").success(function(response) {
-			if(response.status != "success") alert(response.message);
+		$http.get($scope.API_URL + "items/").success(function(response) {
+			if(response.status != "success") $scope.errorMessage = response.message || "Unknown error";
 			else $scope.menuItems = response.items; //Replace menu
 		}).error(function(){
-			alert("HTTP Failure");
+			$scope.errorMessage = "HTTP Failure";
 		});
 	};
 
 	//Upload item CSV
 	$scope.API_addItems = function() {
+		$scope.importSuccess = undefined;
+
 		var buildForm = new FormData();
 		buildForm.append('csv', $scope.importFile);
-		$http.post(API_BASE + "items/", buildForm, {
+		
+		$http.post($scope.API_URL + "items/", buildForm, {
 			transformRequest: angular.identity,
 			headers: {'Content-Type': undefined}
 		}).success(function(response) {
-			if(response.status != "success") alert(response.message);
-			else alert("Import successful"); //Simple success notification
+			if(response.status != "success") $scope.errorMessage = response.message || "Unknown error";
+			else $scope.importSuccess = true; //Simple success notification
 		}).error(function(){
-			alert("HTTP Failure");
+			$scope.errorMessage = "HTTP Failure";
 		});
 	};
 
 	//Request latest order list
 	$scope.API_listOrders = function() {
-		$http.get(API_BASE + "orders/").success(function(response) {
-			if(response.status != "success") alert(response.message);
+		$http.get($scope.API_URL + "orders/").success(function(response) {
+			if(response.status != "success") $scope.errorMessage = response.message || "Unknown error";
 			else
 			{
 				//Merge into single array with status
@@ -40,7 +43,7 @@ function cashRegCtrl($scope, $http)
 				$scope.orderList = response.inProgress.concat(response.paid).concat(response.unpaid);
 			}
 		}).error(function(){
-			alert("HTTP Failure");
+			$scope.errorMessage = "HTTP Failure";
 		});
 	};
 
@@ -49,9 +52,9 @@ function cashRegCtrl($scope, $http)
 		//The busy flag will disable input during requests
 		//	NOTE: Is this reliable enough?
 		$scope.busy = true;
-		$http.post(API_BASE + "orders/").success(function(response){
+		$http.post($scope.API_URL + "orders/").success(function(response){
 			$scope.busy = false;
-			if(response.status != "success") alert(response.message);
+			if(response.status != "success") $scope.errorMessage = response.message || "Unknown error";
 			else
 			{
 				//Assign new order ID to current order
@@ -62,7 +65,7 @@ function cashRegCtrl($scope, $http)
 			}
 		}).error(function(){
 			$scope.busy = false;
-			alert("HTTP Failure");
+			$scope.errorMessage = "HTTP Failure";
 		});
 	};
 
@@ -70,11 +73,11 @@ function cashRegCtrl($scope, $http)
 	$scope.API_updateLine = function(name, qty) {
 		$scope.busy = true;
 		//Post item name and new quantity
-		$http.post(API_BASE + "orders/" + $scope.curOrder.orderId, {
+		$http.post($scope.API_URL + "orders/" + $scope.curOrder.orderId, {
 			"itemName": name,
 			"qty": qty
 		}).success(function(response){
-			if(response.status != "success") alert(response.message);
+			if(response.status != "success") $scope.errorMessage = response.message || "Unknown error";
 			else
 			{
 				//Replace the order totals with those in the response
@@ -82,7 +85,7 @@ function cashRegCtrl($scope, $http)
 			}
 			$scope.busy = false;
 		}).error(function(){
-			alert("HTTP Failure");
+			$scope.errorMessage = "HTTP Failure";
 			$scope.busy = false;
 		});
 	};
@@ -91,9 +94,9 @@ function cashRegCtrl($scope, $http)
 	$scope.API_deleteLine = function(name) {
 		$scope.busy = true;
 		//Delete order-line URI
-		$http.delete(API_BASE + "orders/" + $scope.curOrder.orderId + "/" + encodeURIComponent(encodeURIComponent(name))
+		$http.delete($scope.API_URL + "orders/" + $scope.curOrder.orderId + "/" + encodeURIComponent(encodeURIComponent(name))
 		).success(function(response){
-			if(response.status != "success") alert(response.message);
+			if(response.status != "success") $scope.errorMessage = response.message || "Unknown error";
 			else
 			{
 				//Replace the order totals with those in the response
@@ -101,7 +104,7 @@ function cashRegCtrl($scope, $http)
 			}
 			$scope.busy = false;
 		}).error(function(){
-			alert("HTTP Failure");
+			$scope.errorMessage = "HTTP Failure";
 			$scope.busy = false;
 		});
 	};
@@ -109,9 +112,9 @@ function cashRegCtrl($scope, $http)
 	//Request an order be submitted and assigned an order number
 	$scope.API_submitOrder = function() {
 		$scope.busy = true;
-		$http.put(API_BASE + "orders/" + $scope.curOrder.orderId
+		$http.put($scope.API_URL + "orders/" + $scope.curOrder.orderId
 		).success(function(response){
-			if(response.status != "success") alert(response.message);
+			if(response.status != "success") $scope.errorMessage = response.message || "Unknown error";
 			else
 			{
 				//Assign order number to current order
@@ -120,7 +123,7 @@ function cashRegCtrl($scope, $http)
 			}
 			$scope.busy = false;
 		}).error(function(){
-			alert("HTTP Failure");
+			$scope.errorMessage = "HTTP Failure";
 			$scope.busy = false;
 		});
 	};
@@ -129,13 +132,13 @@ function cashRegCtrl($scope, $http)
 	$scope.API_submitTender = function(amountTendered, changeGiven) {
 		$scope.busy = true;
 		//Post order ID, amount, and change
-		$http.post(API_BASE + "tenders/", {
+		$http.post($scope.API_URL + "tenders/", {
 			"orderId": $scope.curOrder.orderId,
 			"amountTendered": amountTendered,
 			"changeGiven": changeGiven
 		}).success(function(response){
 			$scope.busy = false;
-			if(response.status != "success") alert(response.message);
+			if(response.status != "success") $scope.errorMessage = response.message || "Unknown error";
 			else
 			{
 				//Update the order tender totals
@@ -147,7 +150,7 @@ function cashRegCtrl($scope, $http)
 			}
 		}).error(function(){
 			$scope.busy = false;
-			alert("HTTP Failure");
+			$scope.errorMessage = "HTTP Failure";
 		});
 	};
 
@@ -169,6 +172,7 @@ function cashRegCtrl($scope, $http)
 		{
 			case "order":
 				$scope.curOrder = {
+					"orderId": 0,
 					"orderNumber": 0,
 					"subTotal": 0,
 					"totalTax": 0,
@@ -236,11 +240,13 @@ function cashRegCtrl($scope, $http)
 	//Remove highlighted item from order
 	$scope.voidItem = function() {
 		//Get selected index
-		//	NOTE: needs safety check?
 		var ind = $scope.curOrder.activeLine;
-		//Call delete API and remove stored line
-		$scope.API_deleteLine($scope.curOrder.lines[ind].name);
-		$scope.curOrder.lines.splice(ind, 1);
+		if(ind >= 0 && ind < $scope.curOrder.lines.length)
+		{
+			//Call delete API and remove stored line
+			$scope.API_deleteLine($scope.curOrder.lines[ind].name);
+			$scope.curOrder.lines.splice(ind, 1);
+		}
 		$scope.curOrder.activeLine = undefined;
 	};
 

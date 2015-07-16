@@ -9,6 +9,7 @@
 <body>
 <div data-ng-app = "cashRegApp" data-ng-controller = "cashRegCtrl">
 	<div id = "main-cont">
+		<p id = "error-text" data-ng-show = "errorMessage" data-ng-click = "errorMessage = undefined">{{ errorMessage }}</p>
 		<div id = "nav">
 			<div class = "left-nav" data-ng-show = "view == 'orderList'">
 				<button data-ng-class = "{toggled: orderToggle['All']}" data-ng-click = "doOrderToggle('All')">All</button>
@@ -75,6 +76,7 @@
 				<h2>Import Items</h2>
 				<p>Please provide a CSV file containing names and prices.</p>
 				<p><input type = "file" data-file-input = "importFile"/><input type = "submit" value = "Upload" data-ng-click = "API_addItems()"/></p>
+				<p data-ng-show = "importSuccess">Import successful!</p>
 			</div>
 		</div>
 	</div>

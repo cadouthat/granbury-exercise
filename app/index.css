@@ -40,6 +40,13 @@ button
 	position: relative;
 	padding: 0px 5% 0px 5%;
 }
+#error-text
+{
+	text-align: center;
+	color: red;
+	font-weight: bold;
+	padding-top: 16px;
+}
 #nav
 {
 	text-align: right;
