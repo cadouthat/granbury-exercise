@@ -10,32 +10,71 @@
 <div data-ng-app = "cashRegApp" data-ng-controller = "cashRegCtrl">
 	<div id = "main-cont">
 		<div id = "nav">
-			<button data-ng-disabled = "busy" data-ng-hide = "view == 'import'">Import Items</button>
-			<button data-ng-disabled = "busy" data-ng-hide = "view == 'orderList'">Orders</button>
-			<button data-ng-disabled = "busy" data-ng-hide = "view == 'order'">New Order</button>
+			<div class = "left-nav" data-ng-show = "view == 'orderList'">
+				<button data-ng-class = "{toggled: orderToggle['All']}" data-ng-click = "doOrderToggle('All')">All</button>
+				<button data-ng-class = "{toggled: orderToggle['In Progress']}" data-ng-click = "doOrderToggle('In Progress')">In Progress</button>
+				<button data-ng-class = "{toggled: orderToggle['Unpaid']}" data-ng-click = "doOrderToggle('Unpaid')">Unpaid</button>
+				<button data-ng-class = "{toggled: orderToggle['Paid']}" data-ng-click = "doOrderToggle('Paid')">Paid</button>
+			</div>
+			<button data-ng-disabled = "busy" data-ng-hide = "view == 'import'" data-ng-click = "setView('import')">Import Items</button>
+			<button data-ng-disabled = "busy" data-ng-hide = "view == 'orderList'" data-ng-click = "setView('orderList')">Orders</button>
+			<button data-ng-disabled = "busy" data-ng-hide = "view == 'order'" data-ng-click = "setView('order')">New Order</button>
 		</div>
 		<div data-ng-show = "view == 'order'">
 			<div id = "menu">
 				<button class = "item" data-ng-disabled = "busy" data-ng-repeat = "i in menuItems" data-ng-click = "addItem(i)">{{ i.name }}</button>
 			</div>
 			<div id = "order-cont">
-				<p class = "title">{{ curOrder.orderNumber ? ("Order #" + padNum(curOrder.orderNumber, 3)) : "New Order" }}</p>
+				<p class = "title">{{ (curOrder.orderNumber > 0) ? ("Order #" + padNum(curOrder.orderNumber, 3)) : "New Order" }}</p>
 				<div class = "view">
 					<p class = "line" data-ng-repeat = "line in curOrder.lines" data-ng-class = "{ 'selected': $index == curOrder.activeLine }" data-ng-click = "curOrder.activeLine = $index">{{ line.qty + " " + line.name }}<span class = "price">{{ line.extendedPrice / 100 | currency }}</span></p>
 					<div class = "totals">
 						<p class = "line total">Subtotal<span class = "price">{{ curOrder.subTotal / 100 | currency }}</span></p>
 						<p class = "line total">Sales Tax<span class = "price">{{ curOrder.totalTax / 100 | currency }}</span></p>
 						<p class = "line total">Grand Total<span class = "price">{{ curOrder.grandTotal / 100 | currency }}</span></p>
-						<p class = "line total" data-ng-show = "curOrder.tender">Amount Tendered<span class = "price">{{ curOrder.tend.amountTendered }}</span></p>
-						<p class = "line total" data-ng-show = "curOrder.tender">Change Given<span class = "price">{{ curOrder.tend.changeGiven }}</span></p>
+						<p class = "line total" data-ng-show = "curOrder.totalTendered">Amount Tendered<span class = "price">{{ curOrder.totalTendered / 100 | currency }}</span></p>
+						<p class = "line total" data-ng-show = "curOrder.totalChange">Change Given<span class = "price">{{ curOrder.totalChange / 100 | currency }}</span></p>
 					</div>
 				</div>
 				<button class = "left" data-ng-disabled = "busy || curOrder.activeLine == null" data-ng-click = "voidItem()">Void</button>
-				<button class = "right" data-ng-disabled = "busy" data-ng-click = "curOrder.payNow = true">Pay Now</button>
+				<button class = "right" data-ng-disabled = "busy || curOrder.grandTotal == 0" data-ng-click = "curOrder.payNow = {'tendered': '0.00', 'changeDue': 0}">Pay Now</button>
 			</div>
 			<div id = "pay-now" data-ng-show = "curOrder.payNow">
 				<div class = "inner">
+					<h2>Tender Payment</h2>
+					<div class = "cols">
+						<p class = "left">Amount Due:</p>
+						<p class = "right">{{ curOrder.grandTotal / 100 | currency }}</p>
+						<div class = "clear">&nbsp;</div>
+						<p class = "left">Amount Tendered:</p>
+						<p class = "right">$<input type = "text" data-ng-model = "curOrder.payNow.tendered" data-ng-change = "updateChangeDue()"/></p>
+						<div class = "clear">&nbsp;</div>
+						<p class = "left">Change Due:</p>
+						<p class = "right">{{ curOrder.payNow.changeDue | currency }}</p>
+						<div class = "clear" style = "margin-bottom: 20px;">&nbsp;</div>
+						<button class = "left" data-ng-click = "curOrder.payNow = null">Cancel</button>
+						<button class = "right" data-ng-click = "submitTender()" data-ng-disabled = "(curOrder.payNow.tendered || 0) < curOrder.grandTotal / 100">Tender</button>
+						<div class = "clear">&nbsp;</div>
+					</div>
 				</div>
+			</div>
+		</div>
+		<div data-ng-show = "view == 'orderList'">
+			<table id = "orders-table">
+				<tr><th>Status</th><th>Timestamp</th><th>Order Number</th><th>Total</th></tr>
+				<tr data-ng-repeat = "order in orderList | orderBy : 'timestamp' : true" data-ng-click = "selectOrder(order)" data-ng-if = "orderToggle[order.status]">
+					<td>{{ order.status }}</td>
+					<td>{{ order.timestamp }}</td>
+					<td>{{ (order.orderNumber > 0) ? order.orderNumber : "N/A" }}</td>
+					<td>{{ order.grandTotal / 100 | currency }}</td>
+				</tr>
+			</table>
+		</div>
+		<div data-ng-show = "view == 'import'" id = "import-view">
+			<div class = "inner">
+				<h2>Import Items</h2>
+				<p>Please provide a CSV file containing names and prices.</p>
+				<p><input type = "file" data-file-input = "importFile"/><input type = "submit" value = "Upload" data-ng-click = "API_addItems()"/></p>
 			</div>
 		</div>
 	</div>

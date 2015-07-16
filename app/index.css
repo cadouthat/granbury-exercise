@@ -3,10 +3,16 @@ body, table, td, tr, p, img, form, h1, h2, div, a
 	margin: 0px;
 	padding: 0px;
 }
-p, a, button
+p, h1, h2, a, button
 {
 	font-family: sans-serif;
 	font-size: 12pt;
+}
+h2
+{
+	font-size: 16pt;
+	text-transform: uppercase;
+	padding-bottom: 16px;
 }
 button
 {
@@ -15,13 +21,19 @@ button
 	text-transform: uppercase;
 	cursor: pointer;
 }
-button.left
+.left
 {
 	float: left;
 }
-button.right
+.right
 {
 	float: right;
+}
+.clear
+{
+	clear: both;
+	height: 0px;
+	line-height: 0px;
 }
 #main-cont
 {
@@ -103,4 +115,131 @@ button.right
 #order-cont .view .line
 {
 	padding: 2px 8px 2px 8px;
+}
+#pay-now
+{
+	position: fixed;
+	left: 0px;
+	top: 0px;
+	width: 100%;
+	height: 100%;
+	background: rgba(0, 0, 0, 0.45);
+}
+#pay-now .inner
+{
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 80%;
+	max-width: 400px;
+	padding: 20px 0px 20px 0px;
+	text-align: center;
+	background: #CFCFCF;
+	border: 2px solid #000000;
+	transform: translate(-50%, -50%);
+	-webkit-transform: translate(-50%, -50%);
+}
+#pay-now .cols
+{
+	width: 80%;
+	max-width: 240px;
+	position: relative;
+	margin: auto;
+}
+#pay-now p
+{
+	text-align: right;
+	line-height: 200%;
+}
+#pay-now p.left
+{
+	width: 70%;
+}
+#pay-now p.right
+{
+	width: 28%;
+}
+#pay-now input
+{
+	width: 40px;
+	text-align: right;
+}
+table
+{
+	border-collapse: collapse;
+	border: 1px solid #323232;
+}
+th, td
+{
+	text-align: left;
+	padding: 4px 10px 4px 10px;
+	border-left: 1px solid #323232;
+	border-right: 1px solid #323232;
+}
+table tr:nth-child(even)
+{
+	background: #CFCFCF;
+}
+table tr:nth-child(odd)
+{
+	background: #EFEFEF;
+}
+table tr:nth-child(1)
+{
+	background: #AFAFAF;
+}
+#nav .left-nav
+{
+	float: left;
+}
+#nav .left-nav button
+{
+	margin-left: 0px;
+	margin-right: 16px;
+	background: #AFAFAF;
+}
+#nav .left-nav button.toggled
+{
+	background: #AFFFAF;
+}
+#orders-table
+{
+	width: 100%;
+	margin-bottom: 40px;
+	cursor: default;
+}
+#orders-table tr td:nth-child(1)
+{
+	width: 15%;
+}
+#orders-table tr td:nth-child(2)
+{
+	width: 34%;
+}
+#orders-table tr td:nth-child(3)
+{
+	width: 32%;
+}
+#orders-table tr td:nth-child(4)
+{
+	width: 15%;
+}
+#orders-table tr:hover td
+{
+	background: #EFFFEF;
+}
+#import-view
+{
+	text-align: center;
+}
+#import-view .inner
+{
+	width: 80%;
+	max-width: 500px;
+	margin: auto;
+	text-align: left;
+}
+#import-view p
+{
+	line-height: 200%;
 }
