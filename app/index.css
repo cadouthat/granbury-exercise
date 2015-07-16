@@ -1,0 +1,106 @@
+body, table, td, tr, p, img, form, h1, h2, div, a
+{
+	margin: 0px;
+	padding: 0px;
+}
+p, a, button
+{
+	font-family: sans-serif;
+	font-size: 12pt;
+}
+button
+{
+	font-size: 16pt;
+	padding: 4px 12px 4px 12px;
+	text-transform: uppercase;
+	cursor: pointer;
+}
+button.left
+{
+	float: left;
+}
+button.right
+{
+	float: right;
+}
+#main-cont
+{
+	position: relative;
+	padding: 0px 5% 0px 5%;
+}
+#nav
+{
+	text-align: right;
+	padding-top: 20px;
+	padding-bottom: 20px;
+}
+#nav button
+{
+	margin-left: 16px;
+}
+#menu
+{
+	float: left;
+	width: 68%;
+}
+#menu .item
+{
+	font-size: 14pt;
+	text-transform: none;
+	position: relative;
+	vertical-align: middle;
+	display: inline-block;
+	width: 200px;
+	height: 100px;
+	margin: 16px;
+	text-align: center;
+	cursor: pointer;
+}
+#order-cont
+{
+	float: right;
+	width: 30%;
+	position: relative;
+}
+#order-cont .title
+{
+	font-weight: bold;
+}
+#order-cont .view
+{
+	border: 1px solid #323232;
+	margin-top: 8px;
+	padding-top: 8px;
+	padding-bottom: 132px;
+	margin-bottom: 16px;
+	position: relative;
+	min-height: 250px;
+}
+#order-cont .view .line
+{
+	position: relative;
+	cursor: default;
+}
+#order-cont .view .line:not(.total):not(.selected):hover
+{
+	background: #CFCFCF;
+}
+#order-cont .view .line.selected
+{
+	background: #CFEFCF;
+}
+#order-cont .view .line .price
+{
+	float: right;
+}
+#order-cont .totals
+{
+	position: absolute;
+	left: 0px;
+	bottom: 8px;
+	width: 100%;
+}
+#order-cont .view .line
+{
+	padding: 2px 8px 2px 8px;
+}

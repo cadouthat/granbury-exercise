@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv = "Content-type" content = "text/html;charset=UTF-8"/>
+	<title>Cash Register Exercise</title>
+	<link rel = "stylesheet" type = "text/css" href = "index.css"/>
+	<script src = "//ajax.googleapis.com/ajax/libs/angularjs/1.4.2/angular.min.js"></script>
+</head>
+<body>
+<div data-ng-app = "cashRegApp" data-ng-controller = "cashRegCtrl">
+	<div id = "main-cont">
+		<div id = "nav">
+			<button data-ng-disabled = "busy" data-ng-hide = "view == 'import'">Import Items</button>
+			<button data-ng-disabled = "busy" data-ng-hide = "view == 'orderList'">Orders</button>
+			<button data-ng-disabled = "busy" data-ng-hide = "view == 'order'">New Order</button>
+		</div>
+		<div data-ng-show = "view == 'order'">
+			<div id = "menu">
+				<button class = "item" data-ng-disabled = "busy" data-ng-repeat = "i in menuItems" data-ng-click = "addItem(i)">{{ i.name }}</button>
+			</div>
+			<div id = "order-cont">
+				<p class = "title">{{ curOrder.orderNumber ? ("Order #" + padNum(curOrder.orderNumber, 3)) : "New Order" }}</p>
+				<div class = "view">
+					<p class = "line" data-ng-repeat = "line in curOrder.lines" data-ng-class = "{ 'selected': $index == curOrder.activeLine }" data-ng-click = "curOrder.activeLine = $index">{{ line.qty + " " + line.name }}<span class = "price">{{ line.extendedPrice / 100 | currency }}</span></p>
+					<div class = "totals">
+						<p class = "line total">Subtotal<span class = "price">{{ curOrder.subTotal / 100 | currency }}</span></p>
+						<p class = "line total">Sales Tax<span class = "price">{{ curOrder.totalTax / 100 | currency }}</span></p>
+						<p class = "line total">Grand Total<span class = "price">{{ curOrder.grandTotal / 100 | currency }}</span></p>
+						<p class = "line total" data-ng-show = "curOrder.tender">Amount Tendered<span class = "price">{{ curOrder.tend.amountTendered }}</span></p>
+						<p class = "line total" data-ng-show = "curOrder.tender">Change Given<span class = "price">{{ curOrder.tend.changeGiven }}</span></p>
+					</div>
+				</div>
+				<button class = "left" data-ng-disabled = "busy || curOrder.activeLine == null" data-ng-click = "voidItem()">Void</button>
+				<button class = "right" data-ng-disabled = "busy" data-ng-click = "curOrder.payNow = true">Pay Now</button>
+			</div>
+			<div id = "pay-now" data-ng-show = "curOrder.payNow">
+				<div class = "inner">
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script src = "controller.js"></script>
+</body>
+</html>
