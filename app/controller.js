@@ -91,7 +91,7 @@ function cashRegCtrl($scope, $http)
 	$scope.API_deleteLine = function(name) {
 		$scope.busy = true;
 		//Delete order-line URI
-		$http.delete(API_BASE + "orders/" + $scope.curOrder.orderId + "/" + name
+		$http.delete(API_BASE + "orders/" + $scope.curOrder.orderId + "/" + encodeURIComponent(encodeURIComponent(name))
 		).success(function(response){
 			if(response.status != "success") alert(response.message);
 			else

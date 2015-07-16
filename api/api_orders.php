@@ -186,6 +186,8 @@ function processOrders($item, $subitem)
 	{
 		//Force orderId to integer for query safety
 		$orderId = intval($item);
+		//Item name is double-urlencoded, so an extra urldecode is necessary
+		$subitem = urldecode($subitem);
 		//Sub-item requests
 		switch($_SERVER['REQUEST_METHOD'])
 		{
