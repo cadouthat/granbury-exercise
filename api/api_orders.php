@@ -44,7 +44,7 @@ function update_order_totals($orderId)
 	$q .= "totalTax = ".$totalTax.", ";
 	$q .= "grandTotal = ".$grandTotal." ";
 	$q .= "WHERE orderId = ".$orderId;
-	if(!mysqli_query($mysql, $q)) api_dbfailure();
+	if(!mysqli_query($mysql, $q)) return api_dbfailure();
 	return array("subTotal" => $subTotal, "totalTax" => $totalTax, "grandTotal" => $grandTotal);
 }
 
@@ -87,17 +87,17 @@ function processOrders($item, $subitem)
 						$unpaid[] = $order;
 					}
 				}
-				api_success(array("inProgress" => $inProgress, "paid" => $paid, "unpaid" => $unpaid));
+				return api_success(array("inProgress" => $inProgress, "paid" => $paid, "unpaid" => $unpaid));
 				break;
 
 			case "POST": //Create order
 				//Insert empty order and return ID
-				if(!db_insert("order", array())) api_dbfailure();
-				api_success(array("orderId" => mysqli_insert_id($mysql)));
+				if(!db_insert("order", array())) return api_dbfailure();
+				return api_success(array("orderId" => mysqli_insert_id($mysql)));
 				break;
 
 			default:
-				api_failure("Invalid operation");
+				return api_failure("Invalid operation");
 				break;
 		}
 	}
@@ -111,7 +111,7 @@ function processOrders($item, $subitem)
 			case "PUT": //Submit order
 				//Query existing order
 				$order = db_fetch("SELECT orderNumber FROM `order` WHERE orderId = {$orderId}");
-				if(is_null($order)) api_failure("Order does not exist");
+				if(is_null($order)) return api_failure("Order does not exist");
 				//If order is already submitted, no action is needed
 				$orderNumber = intval($order['orderNumber']);
 				if($orderNumber <= 0)
@@ -119,29 +119,29 @@ function processOrders($item, $subitem)
 					//Atomic counter store/update
 					if(!mysqli_query($mysql, "UPDATE apivars SET value = MOD((@cur_value := value), 100) + 1 WHERE name = 'next_order'"))
 					{
-						api_dbfailure();
+						return api_dbfailure();
 					}
 					$result = db_fetch("SELECT @cur_value AS v");
 					if(is_null($result))
 					{
-						api_dbfailure();
+						return api_dbfailure();
 					}
 					$orderNumber = intval($result['v']);
 					//Update order number
 					if(!mysqli_query($mysql, "UPDATE `order` SET orderNumber = {$orderNumber} WHERE orderId = {$orderId}"))
 					{
-						api_dbfailure();
+						return api_dbfailure();
 					}
 				}
-				api_success(array("orderNumber" => $orderNumber));
+				return api_success(array("orderNumber" => $orderNumber));
 				break;
 
 			case "POST": //Add/update line item
 				//Validate arguments
-				if(!isset($_JSON['itemName'])) api_failure("Requires 'itemName'");
-				if(!isset($_JSON['qty'])) api_failure("Requires 'qty'");
+				if(!isset($_JSON['itemName'])) return api_failure("Requires 'itemName'");
+				if(!isset($_JSON['qty'])) return api_failure("Requires 'qty'");
 				$qty = intval($_JSON['qty']);
-				if($qty <= 0) api_failure("Invalid value for 'qty'");
+				if($qty <= 0) return api_failure("Invalid value for 'qty'");
 				//Query existing line item
 				$name_safe = mysqli_real_escape_string($mysql, $_JSON['itemName']);
 				$line_where = " WHERE orderId = {$orderId} AND itemName = '{$name_safe}'";
@@ -151,7 +151,7 @@ function processOrders($item, $subitem)
 				{
 					//Query current item price
 					$itemPrice = db_fetch("SELECT price FROM `item` WHERE name = '{$name_safe}'");
-					if(is_null($itemPrice)) api_failure("Item not found");
+					if(is_null($itemPrice)) return api_failure("Item not found");
 					$price = intval($itemPrice['price']);
 					//Insert line item
 					$line = array();
@@ -160,7 +160,7 @@ function processOrders($item, $subitem)
 					$line['qty'] = $qty;
 					$line['price'] = $price;
 					$line['extendedPrice'] = $qty * $price;
-					if(!db_insert("orderlineitem", $line)) api_dbfailure();
+					if(!db_insert("orderlineitem", $line)) return api_dbfailure();
 				}
 				else
 				{
@@ -169,16 +169,16 @@ function processOrders($item, $subitem)
 					$ext_price = $qty * $price;
 					if(!mysqli_query($mysql, "UPDATE `orderlineitem` SET qty = {$qty}, extendedPrice = {$ext_price}".$line_where))
 					{
-						api_dbfailure();
+						return api_dbfailure();
 					}
 				}
 				//Calculate new totals
 				$totals = update_order_totals($orderId);
-				api_success(array("totals" => $totals));
+				return api_success(array("totals" => $totals));
 				break;
 
 			default:
-				api_failure("Invalid operation");
+				return api_failure("Invalid operation");
 				break;
 		}
 	}
@@ -197,15 +197,15 @@ function processOrders($item, $subitem)
 				$line_where = " WHERE orderId = {$orderId} AND itemName = '{$name_safe}'";
 				if(!mysqli_query($mysql, "DELETE FROM `orderlineitem`".$line_where))
 				{
-					api_dbfailure();
+					return api_dbfailure();
 				}
 				//Calculate new totals
 				$totals = update_order_totals($orderId);
-				api_success(array("totals" => $totals));
+				return api_success(array("totals" => $totals));
 				break;
 
 			default:
-				api_failure("Invalid operation");
+				return api_failure("Invalid operation");
 				break;
 		}
 	}

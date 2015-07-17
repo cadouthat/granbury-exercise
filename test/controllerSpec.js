@@ -1,3 +1,10 @@
+/*
+Cash register front-end unit testing
+
+Run via lib/SpecRunner.html
+
+*/
+
 describe("cashRegApp", function() {
 	var scope, expectedAPI;
 

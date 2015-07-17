@@ -9,25 +9,38 @@ function api_failure($message = NULL)
 	$obj = array();
 	$obj["status"] = "failure";
 	if(!is_null($message)) $obj["message"] = $message;
-	echo json_encode($obj);
-	exit(0);
+	if(API_TEST)
+	{
+		global $API_TEST_RESULT;
+		$API_TEST_RESULT = $obj;
+	}
+	else
+	{
+		echo json_encode($obj);
+		exit(0);
+	}
+	return 1;
 }
 function api_dbfailure()
 {
-	global $mysql;
-	$obj = array();
-	$obj["status"] = "failure";
-	$obj["message"] = API_DEBUG ? mysqli_error($mysql) : "Database error";
-	echo json_encode($obj);
-	exit(0);
+	return api_failure(API_DEBUG ? mysqli_error($mysql) : "Database error");
 }
 function api_success($result = NULL)
 {
 	$obj = array();
 	$obj["status"] = "success";
 	if(!is_null($result)) $obj = array_merge($obj, $result);
-	echo json_encode($obj);
-	exit(0);
+	if(API_TEST)
+	{
+		global $API_TEST_RESULT;
+		$API_TEST_RESULT = $obj;
+	}
+	else
+	{
+		echo json_encode($obj);
+		exit(0);
+	}
+	return 0;
 }
 
 //Check file upload status
