@@ -2,8 +2,8 @@
 /*
 Global initialization for Granbury API
 */
-require_once("config.php");
-require_once("util.php");
+require_once(__DIR__."/config.php");
+require_once(__DIR__."/util.php");
 
 //Output charset header
 if(!API_TEST) header('Content-Type: text/html; charset=utf-8');

@@ -1,6 +1,6 @@
 function cashRegCtrl($scope, $http)
 {
-	$scope.API_URL = "http://localhost/granbury/api/v1/";
+	$scope.API_URL = "http://" + window.location.hostname + window.location.pathname.replace("/app/", "/api/v1/");
 
 	//Request latest item list
 	$scope.API_listItems = function() {

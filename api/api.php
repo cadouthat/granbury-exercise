@@ -2,10 +2,10 @@
 /*
 Main entry point for Granbury API
 */
-require("init.php");
-require_once("api_items.php");
-require_once("api_orders.php");
-require_once("api_tenders.php");
+require(__DIR__."/init.php");
+require_once(__DIR__."/api_items.php");
+require_once(__DIR__."/api_orders.php");
+require_once(__DIR__."/api_tenders.php");
 
 //Required arguments
 if(!isset($_GET['api'])) return api_failure("API version required");

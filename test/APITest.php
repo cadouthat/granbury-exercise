@@ -4,6 +4,7 @@ Granbury API unit testing
 */
 
 define("API_TEST", true);
+define("API_DEBUG", true);
 
 class APITest extends PHPUnit_Framework_TestCase
 {
